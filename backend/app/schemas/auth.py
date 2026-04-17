@@ -27,3 +27,13 @@ class ResetPasswordRequest(BaseModel):
 
 class ResetPasswordResponse(BaseModel):
     status: str = "password_reset"
+
+
+class ChangePasswordRequest(BaseModel):
+    email: EmailStr
+    current_password: str = Field(min_length=8)
+    new_password: str = Field(min_length=8)
+
+
+class ChangePasswordResponse(BaseModel):
+    status: str = "password_changed"

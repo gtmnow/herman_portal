@@ -6,6 +6,7 @@ Build a temporary standalone login portal that:
 
 - authenticates users with `email + password`
 - supports password reset
+- supports password change
 - maps each authenticated user to the correct `user_id_hash`
 - redirects directly into HermanPrompt with a signed launch token
 - uses the same Postgres database as HermanPrompt
@@ -34,6 +35,7 @@ User-facing login message:
 Portal owns:
 - login UI
 - password reset UI
+- password change UI
 - auth tables and auth logic
 - launch token minting
 
@@ -73,6 +75,12 @@ flowchart LR
 5. User opens reset link.
 6. User submits new password.
 7. Backend validates token and updates password hash.
+
+### Password change flow
+1. User opens the password change screen.
+2. User provides current password and new password.
+3. Backend verifies the current password.
+4. Backend updates the stored password hash and `password_changed_at`.
 
 ## 5. Shared Database Strategy
 
@@ -135,7 +143,14 @@ In development:
 - reset link may be logged or returned in API response
 - real email delivery is not required for v1
 
-### FR8. Admin hooks
+### FR8. Change password
+Portal must support changing password with the current password.
+
+Temporary portal implementation may use:
+- authenticated portal session
+- or a re-authenticated form that includes email, current password, and new password
+
+### FR9. Admin hooks
 Backend must include service layer and route placeholders for future admin actions:
 - add user
 - update user
@@ -294,6 +309,28 @@ Error responses:
 - `400` expired token
 - `400` already used token
 
+### `POST /api/auth/change-password`
+Request:
+```json
+{
+  "email": "jane@example.com",
+  "current_password": "oldSecret123",
+  "new_password": "newSecret456"
+}
+```
+
+Response:
+```json
+{
+  "status": "password_changed"
+}
+```
+
+Error responses:
+- `401` invalid credentials
+- `403` inactive user
+- `400` malformed payload
+
 ### Future admin routes
 Implement as placeholders or protected stubs:
 
@@ -335,6 +372,7 @@ That is the required contract for this portal.
 - `/login`
 - `/forgot-password`
 - `/reset-password`
+- `/change-password`
 
 ### Login page requirements
 - heading text
@@ -354,6 +392,14 @@ That is the required contract for this portal.
 - confirm password
 - submit button
 - success confirmation and link back to login
+
+### Change password page
+- email input for temporary re-authenticated flow
+- current password
+- new password
+- confirm new password
+- submit button
+- success confirmation
 
 ### Redirect behavior
 On successful login:
@@ -401,6 +447,7 @@ herman-login-portal/
         LoginPage.tsx
         ForgotPasswordPage.tsx
         ResetPasswordPage.tsx
+        ChangePasswordPage.tsx
       lib/
         api.ts
       App.tsx
@@ -523,6 +570,8 @@ UI for admin is not required in v1.
 7. reset password
 8. log in with new password
 9. confirm old password no longer works
+10. change password with current password
+11. confirm prior password no longer works
 
 ## 20. Acceptance Criteria
 
@@ -532,5 +581,6 @@ The feature is complete when:
 - HermanPrompt accepts the token and starts the app normally
 - the correct `user_id_hash` is used
 - password reset works end to end
+- password change works end to end
 - auth data is stored in the shared Postgres database
 - future admin hooks exist in backend structure or protected endpoints

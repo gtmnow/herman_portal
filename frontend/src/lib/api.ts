@@ -47,3 +47,23 @@ export async function resetPassword(token: string, newPassword: string) {
 
   return payload as { status: string };
 }
+
+
+export async function changePassword(email: string, currentPassword: string, newPassword: string) {
+  const response = await fetch(`${API_BASE_URL}/api/auth/change-password`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      email,
+      current_password: currentPassword,
+      new_password: newPassword,
+    }),
+  });
+
+  const payload = await response.json();
+  if (!response.ok) {
+    throw new Error(typeof payload.detail === "string" ? payload.detail : "Unable to change password.");
+  }
+
+  return payload as { status: string };
+}

@@ -1,4 +1,5 @@
 import { FormEvent, useState } from "react";
+import logo from "../../assets/logo.png";
 import { login } from "../lib/api";
 
 
@@ -26,7 +27,7 @@ export function LoginPage() {
   return (
     <main className="portal-shell">
       <section className="card">
-        <p className="eyebrow">Herman Portal</p>
+        <img className="portal-logo" src={logo} alt="Herman Prompt" />
         <h1>Welcome to Herman Prompt. Please login to begin.</h1>
         <p className="supporting">
           Use your email and password to access the Herman Prompt workspace.
@@ -61,9 +62,14 @@ export function LoginPage() {
             {loading ? "Logging in..." : "Login"}
           </button>
         </form>
-        <a className="text-link" href="/forgot-password">
-          Forgot your password?
-        </a>
+        <div className="link-stack">
+          <a className="text-link" href="/forgot-password">
+            Forgot your password?
+          </a>
+          <a className="text-link" href="/change-password">
+            Change password
+          </a>
+        </div>
       </section>
     </main>
   );

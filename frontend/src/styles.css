@@ -42,12 +42,11 @@ button {
   backdrop-filter: blur(12px);
 }
 
-.eyebrow {
-  margin: 0 0 8px;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  font-size: 0.78rem;
-  color: #7b5d40;
+.portal-logo {
+  display: block;
+  width: min(280px, 72%);
+  height: auto;
+  margin: 0 0 16px;
 }
 
 .card h1 {
@@ -100,8 +99,13 @@ button {
 
 .text-link {
   display: inline-block;
-  margin-top: 16px;
   color: #81552d;
+}
+
+.link-stack {
+  display: grid;
+  gap: 10px;
+  margin-top: 18px;
 }
 
 .error-banner,
