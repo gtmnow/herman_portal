@@ -16,7 +16,7 @@ The portal is designed to use the same Postgres database as HermanPrompt.
 ```text
 backend/    FastAPI backend
 frontend/   Vite + React frontend
-docs/       build spec and implementation notes
+docs/       build spec and deployment notes
 ```
 
 ## Current Status
@@ -24,6 +24,7 @@ docs/       build spec and implementation notes
 This repo is scaffolded and ready for implementation.
 
 - build spec is in `docs/BUILD_SPEC.md`
+- deployment guide is in `docs/DEPLOYMENT.md`
 - backend app structure is in place
 - frontend app structure is in place
 - auth, password reset, and admin hook boundaries are stubbed
