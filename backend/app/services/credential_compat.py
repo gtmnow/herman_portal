@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
+from functools import lru_cache
 
 from sqlalchemy import text
 from sqlalchemy.orm import Session
@@ -20,19 +21,42 @@ class CredentialSnapshot:
     record: AuthUserCredential | None = None
 
 
+@lru_cache(maxsize=8)
+def _has_credentials_table(database_url: str) -> bool:
+    from sqlalchemy import create_engine
+
+    engine = create_engine(database_url, future=True)
+    with engine.connect() as conn:
+        result = conn.execute(
+            text(
+                """
+                SELECT 1
+                FROM information_schema.tables
+                WHERE table_name = 'auth_user_credentials'
+                LIMIT 1
+                """
+            )
+        ).first()
+    engine.dispose()
+    return result is not None
+
+
+def has_credentials_table(db: Session) -> bool:
+    bind = db.get_bind()
+    return _has_credentials_table(bind.url.render_as_string(hide_password=False))
+
+
 def load_credentials(db: Session, user_id_hash: str) -> CredentialSnapshot | None:
-    try:
+    if has_credentials_table(db):
         record = db.get(AuthUserCredential, user_id_hash)
-    except Exception:
-        record = None
-    if record is not None:
-        return CredentialSnapshot(
-            password_hash=record.password_hash,
-            failed_login_attempts=record.failed_login_attempts,
-            locked_until=record.locked_until,
-            backend="auth_user_credentials",
-            record=record,
-        )
+        if record is not None:
+            return CredentialSnapshot(
+                password_hash=record.password_hash,
+                failed_login_attempts=record.failed_login_attempts,
+                locked_until=record.locked_until,
+                backend="auth_user_credentials",
+                record=record,
+            )
 
     row = db.execute(
         text(
@@ -75,14 +99,8 @@ def record_successful_login(db: Session, credentials: CredentialSnapshot, now: d
 def set_password(db: Session, user: AuthUser, new_password: str, now: datetime) -> None:
     password_hash = hash_password(new_password)
 
-    try:
+    if has_credentials_table(db):
         record = db.get(AuthUserCredential, user.user_id_hash)
-        credentials_table_available = True
-    except Exception:
-        record = None
-        credentials_table_available = False
-
-    if credentials_table_available:
         if record is None:
             record = AuthUserCredential(user_id_hash=user.user_id_hash)
         record.password_hash = password_hash
