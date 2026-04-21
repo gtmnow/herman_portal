@@ -143,7 +143,7 @@ Before invitation acceptance can work end to end, Herman Admin must already have
 Common causes:
 
 - `user_invitations` table missing required TTL/status fields
-- invite token hash comparison is not aligned with the admin generation logic
+- invite token hash comparison is not aligned with the admin generation logic, which uses `sha256(raw_token).hexdigest()`
 - tenant branding lookup is querying the wrong tenant id
 
 ### Frontend shows default branding instead of tenant branding

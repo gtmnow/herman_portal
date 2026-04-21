@@ -34,16 +34,6 @@ def hash_invitation_token(token: str) -> str:
     return hashlib.sha256(token.encode("utf-8")).hexdigest()
 
 
-def invitation_token_candidates(token: str) -> list[str]:
-    digest = hashlib.sha256(token.encode("utf-8")).digest()
-    return [
-        token,
-        digest.hex(),
-        base64.urlsafe_b64encode(digest).decode("utf-8").rstrip("="),
-        base64.b64encode(digest).decode("utf-8"),
-    ]
-
-
 def issue_launch_token(*, external_user_id: str, display_name: str, tenant_id: str, user_id_hash: str) -> str:
     payload = {
         "external_user_id": external_user_id,

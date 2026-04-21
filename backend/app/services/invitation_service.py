@@ -7,7 +7,7 @@ from sqlalchemy import select, text
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.core.security import hash_password, invitation_token_candidates
+from app.core.security import hash_invitation_token, hash_password
 from app.models.auth_user import AuthUser
 from app.models.auth_user_credential import AuthUserCredential
 from app.schemas.auth import AcceptInvitationRequest, AcceptInvitationResponse, InvitationPreviewResponse
@@ -116,33 +116,22 @@ class InvitationService:
         if not normalized_token:
             return None
 
-        token_candidates = invitation_token_candidates(normalized_token)
-        queries = [
-            text(
-                """
-                SELECT invite_token_hash, user_id_hash, tenant_id, email, status, expires_at, accepted_at, revoked_at
-                FROM user_invitations
-                WHERE invite_token_hash = ANY(:token_candidates)
-                LIMIT 1
-                """
-            ),
-            text(
-                """
-                SELECT invite_token_hash, user_id_hash, tenant_id, email, status, expires_at, accepted_at, revoked_at
-                FROM user_invitations
-                WHERE invite_token = ANY(:token_candidates)
-                LIMIT 1
-                """
-            ),
-        ]
+        token_hash = hash_invitation_token(normalized_token)
+        query = text(
+            """
+            SELECT invite_token_hash, user_id_hash, tenant_id, email, status, expires_at, accepted_at, revoked_at
+            FROM user_invitations
+            WHERE invite_token_hash = :token_hash
+            LIMIT 1
+            """
+        )
 
-        for query in queries:
-            try:
-                row = db.execute(query, {"token_candidates": token_candidates}).mappings().first()
-            except Exception:
-                continue
-            if row is not None:
-                return InvitationRecord(**dict(row))
+        try:
+            row = db.execute(query, {"token_hash": token_hash}).mappings().first()
+        except Exception:
+            return None
+        if row is not None:
+            return InvitationRecord(**dict(row))
 
         return None
 

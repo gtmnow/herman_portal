@@ -150,6 +150,7 @@ The backend must:
 ### FR4. Invitation validation
 The backend must:
 - hash the raw token from the query string
+- use the Herman Admin-compatible hash format: lowercase SHA-256 hex digest of the raw `secrets.token_urlsafe(32)` token
 - locate the matching `user_invitations` row
 - reject invalid, expired, revoked, or already-consumed invitations
 - treat `expires_at` as authoritative

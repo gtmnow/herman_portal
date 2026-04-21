@@ -74,6 +74,8 @@ Required columns:
 Portal requirements:
 
 - `/invite` must hash the raw token from the query string and match it against `invite_token_hash`
+- Herman Admin generates raw invitation tokens with `secrets.token_urlsafe(32)`
+- Herman Admin stores `invite_token_hash` as the lowercase SHA-256 hex digest of the raw token
 - the portal must only accept invitations whose `status` is active for acceptance, such as `pending` or `sent`
 - the portal must reject invitations whose `expires_at` is in the past
 - the portal must reject invitations with `revoked_at` populated
@@ -115,7 +117,7 @@ Portal requirements:
 ### Invitation acceptance flow
 
 1. User opens Herman Portal `/invite?token=<raw-token>`.
-2. Portal hashes the raw token.
+2. Portal computes `sha256(raw_token).hexdigest()` and matches it against `user_invitations.invite_token_hash`.
 3. Portal looks up the corresponding `user_invitations` row.
 4. Portal verifies:
    - invitation exists
@@ -176,3 +178,11 @@ Herman Admin already owns the data-entry experience for:
 - invitation generation and send
 
 Herman Portal should therefore focus on consuming those persisted values rather than introducing a second admin surface for the same settings.
+
+## Observed Admin Implementation
+
+The Herman Admin implementation in `/Users/michaelanderson/projects/Herman-Admin/app/invitations.py` currently:
+
+- builds the raw invite token with `secrets.token_urlsafe(32)`
+- stores `invite_token_hash = hashlib.sha256(token.encode("utf-8")).hexdigest()`
+- sends invite URLs shaped like `/invite?token=<raw-token>&tenant=<tenant_key-or-tenant-id>`
