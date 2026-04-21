@@ -18,7 +18,12 @@ class Settings(BaseSettings):
     hermanprompt_launch_secret: str = Field(default="dev-launch-secret", alias="HERMANPROMPT_LAUNCH_SECRET")
     launch_token_ttl_seconds: int = Field(default=3600, alias="LAUNCH_TOKEN_TTL_SECONDS")
     password_reset_token_ttl_seconds: int = Field(default=1800, alias="PASSWORD_RESET_TOKEN_TTL_SECONDS")
+    invitation_token_fallback_ttl_seconds: int = Field(default=604800, alias="INVITATION_TOKEN_FALLBACK_TTL_SECONDS")
     dev_show_reset_links: bool = Field(default=True, alias="DEV_SHOW_RESET_LINKS")
+    default_welcome_message: str = Field(
+        default="Welcome to Herman Prompt. Please login to begin.",
+        alias="DEFAULT_WELCOME_MESSAGE",
+    )
     cors_allowed_origins_raw: str = Field(
         default="http://localhost:5174,http://127.0.0.1:5174",
         alias="CORS_ALLOWED_ORIGINS",

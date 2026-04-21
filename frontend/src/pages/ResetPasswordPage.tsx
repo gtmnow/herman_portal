@@ -1,9 +1,13 @@
 import { FormEvent, useMemo, useState } from "react";
-import { resetPassword } from "../lib/api";
+import { PortalCard } from "../components/PortalCard";
+import { buildTenantAwarePath, getTenantQueryValue, resetPassword } from "../lib/api";
 
 
 export function ResetPasswordPage() {
   const token = useMemo(() => new URLSearchParams(window.location.search).get("token") ?? "", []);
+  const searchParams = new URLSearchParams(window.location.search);
+  const tenantId = getTenantQueryValue(searchParams);
+  const tenantParamName = searchParams.get("tenant") ? "tenant" : "tenant_id";
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -37,11 +41,11 @@ export function ResetPasswordPage() {
   }
 
   return (
-    <main className="portal-shell">
-      <section className="card">
-        <p className="eyebrow">Password Reset</p>
-        <h1>Create a new password</h1>
-        <p className="supporting">Choose a new password for your Herman Portal account.</p>
+    <PortalCard
+      eyebrow="Password Reset"
+      title="Create a new password"
+      supporting="Choose a new password for your Herman Portal account."
+    >
         <form className="stack" onSubmit={handleSubmit}>
           <label className="field">
             <span>New password</span>
@@ -71,10 +75,9 @@ export function ResetPasswordPage() {
             {loading ? "Resetting..." : "Reset password"}
           </button>
         </form>
-        <a className="text-link" href="/login">
+        <a className="text-link" href={buildTenantAwarePath("/login", tenantId, tenantParamName)}>
           Back to login
         </a>
-      </section>
-    </main>
+    </PortalCard>
   );
 }

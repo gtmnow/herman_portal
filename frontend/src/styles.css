@@ -47,6 +47,16 @@ button {
   width: min(280px, 72%);
   height: auto;
   margin: 0 0 16px;
+  object-fit: contain;
+}
+
+.eyebrow {
+  margin: 0 0 10px;
+  color: #81552d;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .card h1 {
@@ -106,6 +116,12 @@ button {
   display: grid;
   gap: 10px;
   margin-top: 18px;
+}
+
+.invite-email {
+  margin: 18px 0 0;
+  color: #314258;
+  font-weight: 600;
 }
 
 .error-banner,

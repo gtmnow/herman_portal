@@ -1,13 +1,39 @@
-import { FormEvent, useState } from "react";
-import logo from "../../assets/logo.png";
-import { login } from "../lib/api";
+import { FormEvent, useEffect, useState } from "react";
+import { PortalCard } from "../components/PortalCard";
+import { buildTenantAwarePath, fetchBranding, getTenantQueryValue, type BrandingPayload, login } from "../lib/api";
 
+const DEFAULT_WELCOME_MESSAGE = "Welcome to Herman Prompt. Please login to begin.";
 
 export function LoginPage() {
+  const searchParams = new URLSearchParams(window.location.search);
+  const tenantId = getTenantQueryValue(searchParams);
+  const tenantParamName = searchParams.get("tenant") ? "tenant" : "tenant_id";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [branding, setBranding] = useState<BrandingPayload>({
+    welcome_message: DEFAULT_WELCOME_MESSAGE,
+    logo_url: null,
+    tenant_id: tenantId,
+    portal_base_url: null,
+  });
+
+  useEffect(() => {
+    let cancelled = false;
+
+    fetchBranding(tenantId, tenantParamName)
+      .then((payload) => {
+        if (!cancelled) {
+          setBranding(payload);
+        }
+      })
+      .catch(() => undefined);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [tenantId, tenantParamName]);
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -25,13 +51,15 @@ export function LoginPage() {
   }
 
   return (
-    <main className="portal-shell">
-      <section className="card">
-        <img className="portal-logo" src={logo} alt="Herman Prompt" />
-        <h1>Welcome to Herman Prompt. Please login to begin.</h1>
-        <p className="supporting">
-          Use your email and password to access the Herman Prompt workspace.
-        </p>
+    <PortalCard
+      title={branding.welcome_message}
+      supporting={
+        tenantId
+          ? "Tenant branding is being applied from the shared admin config."
+          : "Use your email and password to access the Herman Prompt workspace."
+      }
+      logoUrl={branding.logo_url}
+    >
         <form className="stack" onSubmit={handleSubmit}>
           <label className="field">
             <span>Email</span>
@@ -63,14 +91,13 @@ export function LoginPage() {
           </button>
         </form>
         <div className="link-stack">
-          <a className="text-link" href="/forgot-password">
+          <a className="text-link" href={buildTenantAwarePath("/forgot-password", tenantId, tenantParamName)}>
             Forgot your password?
           </a>
-          <a className="text-link" href="/change-password">
+          <a className="text-link" href={buildTenantAwarePath("/change-password", tenantId, tenantParamName)}>
             Change password
           </a>
         </div>
-      </section>
-    </main>
+    </PortalCard>
   );
 }

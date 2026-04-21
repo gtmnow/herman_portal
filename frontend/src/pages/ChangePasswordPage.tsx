@@ -1,8 +1,12 @@
 import { FormEvent, useState } from "react";
-import { changePassword } from "../lib/api";
+import { PortalCard } from "../components/PortalCard";
+import { buildTenantAwarePath, changePassword, getTenantQueryValue } from "../lib/api";
 
 
 export function ChangePasswordPage() {
+  const searchParams = new URLSearchParams(window.location.search);
+  const tenantId = getTenantQueryValue(searchParams);
+  const tenantParamName = searchParams.get("tenant") ? "tenant" : "tenant_id";
   const [email, setEmail] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -36,13 +40,11 @@ export function ChangePasswordPage() {
   }
 
   return (
-    <main className="portal-shell">
-      <section className="card">
-        <p className="eyebrow">Account Security</p>
-        <h1>Change your password</h1>
-        <p className="supporting">
-          For the temporary portal, confirm your current password before choosing a new one.
-        </p>
+    <PortalCard
+      eyebrow="Account Security"
+      title="Change your password"
+      supporting="For the temporary portal, confirm your current password before choosing a new one."
+    >
         <form className="stack" onSubmit={handleSubmit}>
           <label className="field">
             <span>Email</span>
@@ -94,10 +96,9 @@ export function ChangePasswordPage() {
             {loading ? "Saving..." : "Change password"}
           </button>
         </form>
-        <a className="text-link" href="/login">
+        <a className="text-link" href={buildTenantAwarePath("/login", tenantId, tenantParamName)}>
           Back to login
         </a>
-      </section>
-    </main>
+    </PortalCard>
   );
 }

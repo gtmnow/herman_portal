@@ -30,6 +30,10 @@ def hash_reset_token(token: str) -> str:
     return hashlib.sha256(token.encode("utf-8")).hexdigest()
 
 
+def hash_invitation_token(token: str) -> str:
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()
+
+
 def issue_launch_token(*, external_user_id: str, display_name: str, tenant_id: str, user_id_hash: str) -> str:
     payload = {
         "external_user_id": external_user_id,

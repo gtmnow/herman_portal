@@ -1,8 +1,12 @@
 import { FormEvent, useState } from "react";
-import { forgotPassword } from "../lib/api";
+import { PortalCard } from "../components/PortalCard";
+import { buildTenantAwarePath, forgotPassword, getTenantQueryValue } from "../lib/api";
 
 
 export function ForgotPasswordPage() {
+  const searchParams = new URLSearchParams(window.location.search);
+  const tenantId = getTenantQueryValue(searchParams);
+  const tenantParamName = searchParams.get("tenant") ? "tenant" : "tenant_id";
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -29,11 +33,11 @@ export function ForgotPasswordPage() {
   }
 
   return (
-    <main className="portal-shell">
-      <section className="card">
-        <p className="eyebrow">Password Reset</p>
-        <h1>Reset your password</h1>
-        <p className="supporting">Enter your email and we will prepare a reset link.</p>
+    <PortalCard
+      eyebrow="Password Reset"
+      title="Reset your password"
+      supporting="Enter your email and we will prepare a reset link."
+    >
         <form className="stack" onSubmit={handleSubmit}>
           <label className="field">
             <span>Email</span>
@@ -52,10 +56,9 @@ export function ForgotPasswordPage() {
             {loading ? "Preparing..." : "Send reset link"}
           </button>
         </form>
-        <a className="text-link" href="/login">
+        <a className="text-link" href={buildTenantAwarePath("/login", tenantId, tenantParamName)}>
           Back to login
         </a>
-      </section>
-    </main>
+    </PortalCard>
   );
 }

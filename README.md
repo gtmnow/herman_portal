@@ -7,9 +7,9 @@ This repo provides:
 - email/password login
 - password reset flow scaffolding
 - launch token minting for HermanPrompt
-- hooks for a future Herman admin portal
+- hooks for Herman Admin-managed invitation acceptance and tenant branding
 
-The portal is designed to use the same Postgres database as HermanPrompt.
+The portal is designed to use the same Postgres database as HermanPrompt and Herman Admin.
 
 ## Repo Layout
 
@@ -25,10 +25,25 @@ This repo is scaffolded and ready for implementation.
 
 - build spec is in `docs/BUILD_SPEC.md`
 - deployment guide is in `docs/DEPLOYMENT.md`
+- admin-tool integration contract is in `docs/ADMIN_TOOL_DATA_CONTRACT.md`
 - backend app structure is in place
 - frontend app structure is in place
 - auth, password reset, and admin hook boundaries are stubbed
 - local bootstrap scripts exist for initializing auth tables and creating users
+
+## Admin Tool Integration
+
+Herman Portal must consume tenant-owned portal configuration and invitation data written by Herman Admin.
+
+The current contract is documented in:
+
+- `docs/ADMIN_TOOL_DATA_CONTRACT.md`
+
+In practice, that means Herman Portal should read:
+
+- `tenant_portal_configs` for portal URL, logo, and welcome message
+- `user_invitations` for invitation acceptance state and 7-day TTL
+- `auth_users` as the source of truth for authenticated users
 
 ## Next Steps
 
@@ -36,8 +51,9 @@ This repo is scaffolded and ready for implementation.
 2. Install frontend dependencies.
 3. Set `DATABASE_URL` or `DATABASE_PUBLIC_URL` in `backend/.env`.
 4. Run migrations with `python -m app.scripts.init_db`.
-5. Create a test user with `python -m app.scripts.create_user --email ... --password ... --user-id-hash user_1`.
-6. Continue wiring the remaining auth flows and UI polish.
+5. Align the auth schema and routes with the admin contract in `docs/ADMIN_TOOL_DATA_CONTRACT.md`.
+6. Implement `/invite` so users can accept invitations and set their initial passwords.
+7. Continue wiring the remaining auth flows and UI polish.
 
 ## Database Setup
 

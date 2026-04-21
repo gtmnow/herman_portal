@@ -1,11 +1,15 @@
 import { useMemo } from "react";
 import { ChangePasswordPage } from "./pages/ChangePasswordPage";
 import { ForgotPasswordPage } from "./pages/ForgotPasswordPage";
+import { InvitePage } from "./pages/InvitePage";
 import { LoginPage } from "./pages/LoginPage";
 import { ResetPasswordPage } from "./pages/ResetPasswordPage";
 
 
 function getRoute(pathname: string) {
+  if (pathname === "/invite") {
+    return "invite";
+  }
   if (pathname === "/forgot-password") {
     return "forgot-password";
   }
@@ -21,6 +25,10 @@ function getRoute(pathname: string) {
 
 export function App() {
   const route = useMemo(() => getRoute(window.location.pathname), []);
+
+  if (route === "invite") {
+    return <InvitePage />;
+  }
 
   if (route === "forgot-password") {
     return <ForgotPasswordPage />;
