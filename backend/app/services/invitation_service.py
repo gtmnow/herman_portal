@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from sqlalchemy import select, text
 from sqlalchemy.orm import Session
@@ -27,6 +27,7 @@ class InvitationRecord:
     expires_at: datetime | None
     accepted_at: datetime | None
     revoked_at: datetime | None
+    created_at: datetime | None
 
 
 class InvitationService:
@@ -117,30 +118,48 @@ class InvitationService:
             return None
 
         token_hash = hash_invitation_token(normalized_token)
-        query = text(
-            """
-            SELECT invite_token_hash, user_id_hash, tenant_id, email, status, expires_at, accepted_at, revoked_at
-            FROM user_invitations
-            WHERE invite_token_hash = :token_hash
-            LIMIT 1
-            """
-        )
+        queries = [
+            text(
+                """
+                SELECT invite_token_hash, user_id_hash, tenant_id, email, status, expires_at, accepted_at, revoked_at, created_at
+                FROM user_invitations
+                WHERE invite_token_hash = :token_hash
+                LIMIT 1
+                """
+            ),
+            text(
+                """
+                SELECT invite_token_hash, user_id_hash, tenant_id, email, status,
+                       NULL::timestamptz AS expires_at,
+                       accepted_at,
+                       NULL::timestamptz AS revoked_at,
+                       created_at
+                FROM user_invitations
+                WHERE invite_token_hash = :token_hash
+                LIMIT 1
+                """
+            ),
+        ]
 
-        try:
-            row = db.execute(query, {"token_hash": token_hash}).mappings().first()
-        except Exception:
-            return None
-        if row is not None:
-            return InvitationRecord(**dict(row))
+        for query in queries:
+            try:
+                row = db.execute(query, {"token_hash": token_hash}).mappings().first()
+            except Exception:
+                continue
+            if row is not None:
+                return InvitationRecord(**dict(row))
 
         return None
 
     def _get_invitation_validation_error(self, invitation: InvitationRecord) -> str | None:
-        if invitation.status not in ACCEPTABLE_INVITATION_STATUSES:
+        normalized_status = invitation.status.strip().lower()
+        if normalized_status not in ACCEPTABLE_INVITATION_STATUSES:
             return "This invitation is no longer available."
-        if invitation.revoked_at is not None:
+        if invitation.revoked_at is not None or normalized_status == "revoked":
             return "This invitation has been revoked."
         expires_at = invitation.expires_at
+        if expires_at is None and invitation.created_at is not None:
+            expires_at = invitation.created_at + timedelta(seconds=settings.invitation_token_fallback_ttl_seconds)
         if expires_at is None:
             return (
                 "This invitation is missing an expiration timestamp. "
