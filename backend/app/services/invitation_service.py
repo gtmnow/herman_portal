@@ -9,9 +9,9 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.core.security import hash_invitation_token, hash_password
 from app.models.auth_user import AuthUser
-from app.models.auth_user_credential import AuthUserCredential
 from app.schemas.auth import AcceptInvitationRequest, AcceptInvitationResponse, InvitationPreviewResponse
 from app.services.branding_service import BrandingService
+from app.services.credential_compat import set_password
 from app.services.launch_token_service import LaunchTokenService
 
 ACCEPTABLE_INVITATION_STATUSES = {"pending", "sent"}
@@ -81,22 +81,12 @@ class InvitationService:
             raise ValueError("Invitation email does not match the mapped user.")
 
         now = datetime.utcnow()
-        credentials = db.get(AuthUserCredential, invitation.user_id_hash)
-        if credentials is None:
-            credentials = AuthUserCredential(user_id_hash=invitation.user_id_hash)
-
-        credentials.password_hash = hash_password(payload.new_password)
-        credentials.password_algorithm = "bcrypt"
-        credentials.password_set_at = now
-        credentials.failed_login_attempts = 0
-        credentials.locked_until = None
-        credentials.last_login_at = now
+        set_password(db, user, payload.new_password, now)
 
         user.is_active = True
         user.updated_at = now
         user.last_login_at = now
 
-        db.add(credentials)
         db.add(user)
         self._mark_invitation_accepted(db, invitation.invite_token_hash, now)
         db.commit()

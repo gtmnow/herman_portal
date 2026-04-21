@@ -27,6 +27,8 @@ export function InvitePage() {
   const [invitation, setInvitation] = useState<InvitationPreviewPayload>(DEFAULT_INVITE_STATE);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -118,25 +120,45 @@ export function InvitePage() {
           <form className="stack" onSubmit={handleSubmit}>
             <label className="field">
               <span>New password</span>
-              <input
-                autoComplete="new-password"
-                type="password"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                placeholder="Enter a new password"
-                required
-              />
+              <span className="password-field">
+                <input
+                  autoComplete="new-password"
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  placeholder="Enter a new password"
+                  required
+                />
+                <button
+                  className="password-toggle"
+                  type="button"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  onClick={() => setShowPassword((value) => !value)}
+                >
+                  <EyeIcon open={showPassword} />
+                </button>
+              </span>
             </label>
             <label className="field">
               <span>Confirm password</span>
-              <input
-                autoComplete="new-password"
-                type="password"
-                value={confirmPassword}
-                onChange={(event) => setConfirmPassword(event.target.value)}
-                placeholder="Confirm your new password"
-                required
-              />
+              <span className="password-field">
+                <input
+                  autoComplete="new-password"
+                  type={showConfirmPassword ? "text" : "password"}
+                  value={confirmPassword}
+                  onChange={(event) => setConfirmPassword(event.target.value)}
+                  placeholder="Confirm your new password"
+                  required
+                />
+                <button
+                  className="password-toggle"
+                  type="button"
+                  aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                  onClick={() => setShowConfirmPassword((value) => !value)}
+                >
+                  <EyeIcon open={showConfirmPassword} />
+                </button>
+              </span>
             </label>
             {error ? <div className="error-banner">{error}</div> : null}
             <button className="primary-button" type="submit" disabled={loading}>
@@ -152,5 +174,31 @@ export function InvitePage() {
         </>
       )}
     </PortalCard>
+  );
+}
+
+function EyeIcon({ open }: { open: boolean }) {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" className="password-toggle-icon">
+      <path
+        d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" strokeWidth="1.8" />
+      {open ? null : (
+        <path
+          d="M4 20 20 4"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      )}
+    </svg>
   );
 }
