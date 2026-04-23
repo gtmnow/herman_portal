@@ -20,6 +20,7 @@ class Settings(BaseSettings):
     portal_session_cookie_name: str = Field(default="herman_portal_session", alias="PORTAL_SESSION_COOKIE_NAME")
     portal_session_ttl_seconds: int = Field(default=43200, alias="PORTAL_SESSION_TTL_SECONDS")
     portal_session_secure: bool = Field(default=False, alias="PORTAL_SESSION_SECURE")
+    portal_session_same_site: str = Field(default="lax", alias="PORTAL_SESSION_SAME_SITE")
     password_reset_token_ttl_seconds: int = Field(default=1800, alias="PASSWORD_RESET_TOKEN_TTL_SECONDS")
     invitation_token_fallback_ttl_seconds: int = Field(default=604800, alias="INVITATION_TOKEN_FALLBACK_TTL_SECONDS")
     dev_show_reset_links: bool = Field(default=True, alias="DEV_SHOW_RESET_LINKS")

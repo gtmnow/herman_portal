@@ -17,6 +17,9 @@ This checklist exists to lock the portal-side implementation details before codi
 - The browser receives only a session cookie; it does not store long-lived auth state in local storage.
 - The portal session is required for `/api/auth/me`, `/api/auth/apps`, Admin MFA, and app launch initiation.
 - Portal logout invalidates the server-side session and clears the session cookie.
+- When portal frontend and backend are deployed on different origins, the portal session cookie must use cross-site-compatible settings:
+  - `Secure=true`
+  - `SameSite=None`
 
 ## Portal Auth Endpoints
 
