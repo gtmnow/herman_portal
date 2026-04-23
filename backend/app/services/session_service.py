@@ -37,8 +37,8 @@ class SessionService:
         response.delete_cookie(
             key=settings.portal_session_cookie_name,
             httponly=True,
-            samesite=settings.portal_session_same_site,
-            secure=settings.portal_session_secure,
+            samesite=settings.effective_portal_session_same_site,
+            secure=settings.effective_portal_session_secure,
             path="/",
         )
 
@@ -68,7 +68,7 @@ class SessionService:
             value=raw_token,
             max_age=settings.portal_session_ttl_seconds,
             httponly=True,
-            samesite=settings.portal_session_same_site,
-            secure=settings.portal_session_secure,
+            samesite=settings.effective_portal_session_same_site,
+            secure=settings.effective_portal_session_secure,
             path="/",
         )

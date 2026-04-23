@@ -20,6 +20,7 @@ This checklist exists to lock the portal-side implementation details before codi
 - When portal frontend and backend are deployed on different origins, the portal session cookie must use cross-site-compatible settings:
   - `Secure=true`
   - `SameSite=None`
+- In production, portal session cookie handling should default to cross-site-compatible settings even if the explicit cookie env vars are not overridden.
 
 ## Portal Auth Endpoints
 

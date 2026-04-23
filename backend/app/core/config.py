@@ -43,6 +43,19 @@ class Settings(BaseSettings):
     def sqlalchemy_database_url(self) -> str:
         return _normalize_database_url(self.database_url)
 
+    @property
+    def effective_portal_session_same_site(self) -> str:
+        configured = self.portal_session_same_site.strip().lower()
+        if configured in {"lax", "strict", "none"}:
+            if self.app_env.lower() == "production" and configured == "lax":
+                return "none"
+            return configured
+        return "none" if self.app_env.lower() == "production" else "lax"
+
+    @property
+    def effective_portal_session_secure(self) -> bool:
+        return self.portal_session_secure or self.app_env.lower() == "production"
+
 
 @lru_cache
 def get_settings() -> Settings:
