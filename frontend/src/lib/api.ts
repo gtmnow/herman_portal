@@ -1,4 +1,7 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8010";
+const SESSION_FETCH_OPTIONS: RequestInit = {
+  credentials: "include",
+};
 
 export type BrandingPayload = {
   tenant_id?: string | null;
@@ -16,10 +19,27 @@ export type InvitationPreviewPayload = {
   error?: string | null;
 };
 
+export type PortalUserSummary = {
+  email: string;
+  user_id_hash: string;
+  display_name?: string | null;
+  tenant_id?: string | null;
+};
+
+export type AppDescriptor = {
+  app_key: string;
+  label: string;
+  description: string;
+  enabled: boolean;
+  launch_mode: string;
+  requires_mfa?: boolean | null;
+};
+
 
 export async function login(email: string, password: string) {
   const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
     method: "POST",
+    ...SESSION_FETCH_OPTIONS,
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password }),
   });
@@ -29,7 +49,7 @@ export async function login(email: string, password: string) {
     throw new Error(typeof payload.detail === "string" ? payload.detail : "Unable to log in.");
   }
 
-  return payload as { launch_token: string; redirect_url: string };
+  return payload as { status: string; redirect_path: string; user: PortalUserSummary };
 }
 
 
@@ -59,7 +79,7 @@ export async function fetchBranding(tenantId?: string | null, tenantParamName: "
     params.set(tenantParamName, tenantId);
   }
 
-  const response = await fetch(`${API_BASE_URL}/api/auth/branding${params.toString() ? `?${params}` : ""}`);
+  const response = await fetch(`${API_BASE_URL}/api/auth/branding${params.toString() ? `?${params}` : ""}`, SESSION_FETCH_OPTIONS);
   const payload = await response.json();
   if (!response.ok) {
     throw new Error(typeof payload.detail === "string" ? payload.detail : "Unable to load branding.");
@@ -71,7 +91,7 @@ export async function fetchBranding(tenantId?: string | null, tenantParamName: "
 
 export async function fetchInvitation(token: string) {
   const params = new URLSearchParams({ token });
-  const response = await fetch(`${API_BASE_URL}/api/auth/invite?${params}`);
+  const response = await fetch(`${API_BASE_URL}/api/auth/invite?${params}`, SESSION_FETCH_OPTIONS);
   const payload = await response.json();
   if (!response.ok) {
     throw new Error(typeof payload.detail === "string" ? payload.detail : "Unable to load invitation.");
@@ -84,6 +104,7 @@ export async function fetchInvitation(token: string) {
 export async function acceptInvitation(token: string, newPassword: string) {
   const response = await fetch(`${API_BASE_URL}/api/auth/accept-invite`, {
     method: "POST",
+    ...SESSION_FETCH_OPTIONS,
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ token, new_password: newPassword }),
   });
@@ -100,6 +121,7 @@ export async function acceptInvitation(token: string, newPassword: string) {
 export async function forgotPassword(email: string) {
   const response = await fetch(`${API_BASE_URL}/api/auth/forgot-password`, {
     method: "POST",
+    ...SESSION_FETCH_OPTIONS,
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email }),
   });
@@ -116,6 +138,7 @@ export async function forgotPassword(email: string) {
 export async function resetPassword(token: string, newPassword: string) {
   const response = await fetch(`${API_BASE_URL}/api/auth/reset-password`, {
     method: "POST",
+    ...SESSION_FETCH_OPTIONS,
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ token, new_password: newPassword }),
   });
@@ -132,6 +155,7 @@ export async function resetPassword(token: string, newPassword: string) {
 export async function changePassword(email: string, currentPassword: string, newPassword: string) {
   const response = await fetch(`${API_BASE_URL}/api/auth/change-password`, {
     method: "POST",
+    ...SESSION_FETCH_OPTIONS,
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       email,
@@ -143,6 +167,45 @@ export async function changePassword(email: string, currentPassword: string, new
   const payload = await response.json();
   if (!response.ok) {
     throw new Error(typeof payload.detail === "string" ? payload.detail : "Unable to change password.");
+  }
+
+  return payload as { status: string };
+}
+
+
+export async function fetchApps() {
+  const response = await fetch(`${API_BASE_URL}/api/auth/apps`, SESSION_FETCH_OPTIONS);
+  const payload = await response.json();
+  if (!response.ok) {
+    throw new Error(typeof payload.detail === "string" ? payload.detail : "Unable to load apps.");
+  }
+
+  return payload as { user: PortalUserSummary; apps: AppDescriptor[] };
+}
+
+
+export async function launchPrompt() {
+  const response = await fetch(`${API_BASE_URL}/api/auth/launch/prompt`, {
+    method: "POST",
+    ...SESSION_FETCH_OPTIONS,
+  });
+  const payload = await response.json();
+  if (!response.ok) {
+    throw new Error(typeof payload.detail === "string" ? payload.detail : "Unable to launch Herman Prompt.");
+  }
+
+  return payload as { launch_token: string; redirect_url: string };
+}
+
+
+export async function logout() {
+  const response = await fetch(`${API_BASE_URL}/api/auth/logout`, {
+    method: "POST",
+    ...SESSION_FETCH_OPTIONS,
+  });
+  const payload = await response.json();
+  if (!response.ok) {
+    throw new Error(typeof payload.detail === "string" ? payload.detail : "Unable to log out.");
   }
 
   return payload as { status: string };

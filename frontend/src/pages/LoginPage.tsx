@@ -42,7 +42,7 @@ export function LoginPage() {
 
     try {
       const payload = await login(email, password);
-      window.location.href = payload.redirect_url;
+      window.location.href = buildTenantAwarePath(payload.redirect_path, tenantId, tenantParamName);
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : "Unable to log in.");
     } finally {

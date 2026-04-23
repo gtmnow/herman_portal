@@ -6,9 +6,35 @@ class LoginRequest(BaseModel):
     password: str = Field(min_length=8)
 
 
+class PortalUserSummary(BaseModel):
+    email: EmailStr
+    user_id_hash: str
+    display_name: str | None = None
+    tenant_id: str | None = None
+
+
 class LoginResponse(BaseModel):
-    launch_token: str
-    redirect_url: str
+    status: str = "authenticated"
+    redirect_path: str = "/apps"
+    user: PortalUserSummary
+
+
+class LogoutResponse(BaseModel):
+    status: str = "logged_out"
+
+
+class AppDescriptor(BaseModel):
+    app_key: str
+    label: str
+    description: str
+    enabled: bool
+    launch_mode: str
+    requires_mfa: bool | None = None
+
+
+class AppsResponse(BaseModel):
+    user: PortalUserSummary
+    apps: list[AppDescriptor]
 
 
 class BrandingResponse(BaseModel):

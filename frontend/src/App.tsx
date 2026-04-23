@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { AppsPage } from "./pages/AppsPage";
 import { ChangePasswordPage } from "./pages/ChangePasswordPage";
 import { ForgotPasswordPage } from "./pages/ForgotPasswordPage";
 import { InvitePage } from "./pages/InvitePage";
@@ -18,6 +19,9 @@ function getRoute(pathname: string) {
   }
   if (pathname === "/change-password") {
     return "change-password";
+  }
+  if (pathname === "/apps") {
+    return "apps";
   }
   return "login";
 }
@@ -40,6 +44,10 @@ export function App() {
 
   if (route === "change-password") {
     return <ChangePasswordPage />;
+  }
+
+  if (route === "apps") {
+    return <AppsPage />;
   }
 
   return <LoginPage />;

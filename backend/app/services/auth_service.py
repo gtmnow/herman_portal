@@ -7,15 +7,17 @@ from sqlalchemy.orm import Session
 
 from app.core.security import verify_password
 from app.models.auth_user import AuthUser
-from app.schemas.auth import ChangePasswordRequest, ChangePasswordResponse, LoginRequest, LoginResponse
+from app.schemas.auth import (
+    ChangePasswordRequest,
+    ChangePasswordResponse,
+    LoginRequest,
+    LoginResponse,
+    PortalUserSummary,
+)
 from app.services.credential_compat import load_credentials, record_failed_login, record_successful_login, set_password
-from app.services.launch_token_service import LaunchTokenService
 
 
 class AuthService:
-    def __init__(self) -> None:
-        self.launch_token_service = LaunchTokenService()
-
     def login(self, payload: LoginRequest, *, db: Session) -> LoginResponse:
         user = self._get_user_by_email(db, payload.email)
         credentials = load_credentials(db, user.user_id_hash) if user is not None else None
@@ -35,15 +37,13 @@ class AuthService:
         db.add(user)
         db.commit()
 
-        launch_token = self.launch_token_service.create_launch_token(
-            external_user_id=f"auth_user:{user.user_id_hash}",
-            display_name=user.display_name or user.email,
-            tenant_id=user.tenant_id,
-            user_id_hash=user.user_id_hash,
-        )
         return LoginResponse(
-            launch_token=launch_token,
-            redirect_url=self.launch_token_service.build_redirect_url(launch_token),
+            user=PortalUserSummary(
+                email=user.email,
+                user_id_hash=user.user_id_hash,
+                display_name=user.display_name,
+                tenant_id=user.tenant_id,
+            ),
         )
 
     def change_password(self, payload: ChangePasswordRequest, *, db: Session) -> ChangePasswordResponse:

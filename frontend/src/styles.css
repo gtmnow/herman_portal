@@ -136,6 +136,27 @@ button {
   cursor: wait;
 }
 
+.secondary-button,
+.text-button {
+  font-weight: 600;
+}
+
+.secondary-button {
+  border: 1px solid #c8d4e0;
+  border-radius: 14px;
+  padding: 14px 18px;
+  background: #f8fbfe;
+  color: #314258;
+}
+
+.text-button {
+  border: 0;
+  background: transparent;
+  color: #81552d;
+  padding: 0;
+  text-align: left;
+}
+
 .text-link {
   display: inline-block;
   color: #81552d;
@@ -168,4 +189,34 @@ button {
 .success-banner {
   background: #e7f6ea;
   color: #23643a;
+}
+
+.apps-grid {
+  display: grid;
+  gap: 14px;
+}
+
+.app-tile {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid rgba(20, 32, 51, 0.1);
+  border-radius: 18px;
+  background: rgba(248, 251, 254, 0.8);
+}
+
+.app-tile-copy {
+  display: grid;
+  gap: 6px;
+}
+
+.app-tile-copy h2 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.app-tile-copy p {
+  margin: 0;
+  color: #48556a;
+  line-height: 1.5;
 }
