@@ -6,21 +6,27 @@ from app.models import (
     AuthUser,
     AuthUserCredential,
     PasswordResetToken,
-    TenantPortalConfig,
-    UserInvitation,
 )
 
 
 def initialize_database() -> None:
-    # Importing model symbols ensures SQLAlchemy metadata is fully registered
-    # before create_all runs in local/dev bootstrap flows.
+    # Only create portal-owned auth tables here. Shared Admin-owned tables such
+    # as `tenant_portal_configs` and `user_invitations` must come from their
+    # canonical migration owner to avoid cross-repo schema drift.
     _ = (
         AuthMfaChallenge,
         AuthSession,
         AuthUser,
         AuthUserCredential,
         PasswordResetToken,
-        TenantPortalConfig,
-        UserInvitation,
     )
-    Base.metadata.create_all(bind=engine)
+    Base.metadata.create_all(
+        bind=engine,
+        tables=[
+            AuthUser.__table__,
+            AuthUserCredential.__table__,
+            PasswordResetToken.__table__,
+            AuthSession.__table__,
+            AuthMfaChallenge.__table__,
+        ],
+    )
