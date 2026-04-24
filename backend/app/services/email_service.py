@@ -42,6 +42,23 @@ class EmailService:
         try:
             with request.urlopen(req, timeout=15) as response:
                 if response.status >= 400:
-                    raise EmailDeliveryError("Admin MFA email delivery failed.")
-        except (HTTPError, URLError) as exc:
-            raise EmailDeliveryError("Admin MFA email delivery failed.") from exc
+                    body = response.read().decode("utf-8", errors="replace").strip()
+                    raise EmailDeliveryError(
+                        f"Admin MFA email delivery failed (HTTP {response.status})"
+                        + (f": {body}" if body else ".")
+                    )
+        except HTTPError as exc:
+            try:
+                body = exc.read().decode("utf-8", errors="replace").strip()
+            except Exception:  # pragma: no cover - defensive error parsing
+                body = ""
+            detail = f"Admin MFA email delivery failed (HTTP {exc.code})"
+            if body:
+                detail = f"{detail}: {body}"
+            raise EmailDeliveryError(detail) from exc
+        except URLError as exc:
+            reason = str(exc.reason).strip() if getattr(exc, "reason", None) else ""
+            detail = "Admin MFA email delivery failed"
+            if reason:
+                detail = f"{detail}: {reason}"
+            raise EmailDeliveryError(detail) from exc
