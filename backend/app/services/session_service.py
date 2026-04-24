@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 
 from fastapi import HTTPException, Request, Response, status
@@ -10,6 +11,12 @@ from app.core.config import settings
 from app.core.security import generate_session_token, hash_session_token
 from app.models.auth_session import AuthSession
 from app.models.auth_user import AuthUser
+
+
+@dataclass
+class SessionContext:
+    user: AuthUser
+    session: AuthSession
 
 
 class SessionService:
@@ -42,7 +49,7 @@ class SessionService:
             path="/",
         )
 
-    def get_current_user(self, *, db: Session, request: Request) -> AuthUser:
+    def get_current_context(self, *, db: Session, request: Request) -> SessionContext:
         raw_token = request.cookies.get(settings.portal_session_cookie_name)
         if not raw_token:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required.")
@@ -60,7 +67,10 @@ class SessionService:
         db.add(session_record)
         db.commit()
         db.refresh(user)
-        return user
+        return SessionContext(user=user, session=session_record)
+
+    def get_current_user(self, *, db: Session, request: Request) -> AuthUser:
+        return self.get_current_context(db=db, request=request).user
 
     def _set_session_cookie(self, response: Response, raw_token: str) -> None:
         response.set_cookie(

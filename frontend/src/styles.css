@@ -77,6 +77,10 @@ button {
   margin-top: 24px;
 }
 
+.compact-stack {
+  margin-top: 0;
+}
+
 .field {
   display: grid;
   gap: 8px;
@@ -219,4 +223,11 @@ button {
   margin: 0;
   color: #48556a;
   line-height: 1.5;
+}
+
+.app-actions-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
 }

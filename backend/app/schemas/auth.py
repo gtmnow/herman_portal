@@ -37,6 +37,25 @@ class AppsResponse(BaseModel):
     apps: list[AppDescriptor]
 
 
+class AdminMfaRequestResponse(BaseModel):
+    status: str
+    expires_in_seconds: int
+    dev_code: str | None = None
+
+
+class AdminMfaVerifyRequest(BaseModel):
+    code: str = Field(min_length=4, max_length=12)
+
+
+class AdminMfaVerifyResponse(BaseModel):
+    status: str
+    verified_for_seconds: int
+
+
+class AdminLaunchResponse(BaseModel):
+    redirect_url: str
+
+
 class BrandingResponse(BaseModel):
     tenant_id: str | None = None
     logo_url: str | None = None

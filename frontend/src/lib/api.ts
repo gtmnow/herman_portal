@@ -35,6 +35,17 @@ export type AppDescriptor = {
   requires_mfa?: boolean | null;
 };
 
+export type AdminMfaRequestResponse = {
+  status: string;
+  expires_in_seconds: number;
+  dev_code?: string | null;
+};
+
+export type AdminMfaVerifyResponse = {
+  status: string;
+  verified_for_seconds: number;
+};
+
 
 export async function login(email: string, password: string) {
   const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
@@ -209,4 +220,48 @@ export async function logout() {
   }
 
   return payload as { status: string };
+}
+
+
+export async function requestAdminMfa() {
+  const response = await fetch(`${API_BASE_URL}/api/auth/mfa/admin/request`, {
+    method: "POST",
+    ...SESSION_FETCH_OPTIONS,
+  });
+  const payload = await response.json();
+  if (!response.ok) {
+    throw new Error(typeof payload.detail === "string" ? payload.detail : "Unable to send Admin verification code.");
+  }
+
+  return payload as AdminMfaRequestResponse;
+}
+
+
+export async function verifyAdminMfa(code: string) {
+  const response = await fetch(`${API_BASE_URL}/api/auth/mfa/admin/verify`, {
+    method: "POST",
+    ...SESSION_FETCH_OPTIONS,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ code }),
+  });
+  const payload = await response.json();
+  if (!response.ok) {
+    throw new Error(typeof payload.detail === "string" ? payload.detail : "Unable to verify Admin code.");
+  }
+
+  return payload as AdminMfaVerifyResponse;
+}
+
+
+export async function launchAdmin() {
+  const response = await fetch(`${API_BASE_URL}/api/auth/launch/admin`, {
+    method: "POST",
+    ...SESSION_FETCH_OPTIONS,
+  });
+  const payload = await response.json();
+  if (!response.ok) {
+    throw new Error(typeof payload.detail === "string" ? payload.detail : "Unable to launch Herman Admin.");
+  }
+
+  return payload as { redirect_url: string };
 }

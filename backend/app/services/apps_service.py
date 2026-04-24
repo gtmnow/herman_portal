@@ -10,7 +10,7 @@ from app.schemas.auth import AppDescriptor, AppsResponse, PortalUserSummary
 
 class AppsService:
     def get_available_apps(self, *, db: Session, user: AuthUser) -> AppsResponse:
-        has_admin_access = self._has_admin_access(db=db, user_id_hash=user.user_id_hash)
+        has_admin_access = self.has_admin_access(db=db, user_id_hash=user.user_id_hash)
         return AppsResponse(
             user=self._to_user_summary(user),
             apps=[
@@ -33,7 +33,7 @@ class AppsService:
             ],
         )
 
-    def _has_admin_access(self, *, db: Session, user_id_hash: str) -> bool:
+    def has_admin_access(self, *, db: Session, user_id_hash: str) -> bool:
         try:
             result = db.execute(
                 text(

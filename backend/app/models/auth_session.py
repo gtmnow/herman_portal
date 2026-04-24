@@ -15,5 +15,6 @@ class AuthSession(Base):
     user_id_hash: Mapped[str] = mapped_column(String(255), index=True)
     expires_at: Mapped[datetime] = mapped_column(DateTime, index=True)
     revoked_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    admin_mfa_verified_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     last_seen_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)

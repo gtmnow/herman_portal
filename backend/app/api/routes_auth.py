@@ -7,6 +7,10 @@ from app.models.auth_user import AuthUser
 from app.schemas.auth import (
     AcceptInvitationRequest,
     AcceptInvitationResponse,
+    AdminLaunchResponse,
+    AdminMfaRequestResponse,
+    AdminMfaVerifyRequest,
+    AdminMfaVerifyResponse,
     AppsResponse,
     BrandingResponse,
     ChangePasswordRequest,
@@ -21,16 +25,20 @@ from app.schemas.auth import (
     ResetPasswordRequest,
     ResetPasswordResponse,
 )
+from app.services.admin_launch_service import AdminLaunchService
+from app.services.admin_mfa_service import AdminMfaService
 from app.services.apps_service import AppsService
 from app.services.auth_service import AuthService
 from app.services.branding_service import BrandingService
 from app.services.invitation_service import InvitationService
 from app.services.launch_token_service import LaunchTokenService
 from app.services.password_reset_service import PasswordResetService
-from app.services.session_service import SessionService
+from app.services.session_service import SessionContext, SessionService
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 auth_service = AuthService()
+admin_launch_service = AdminLaunchService()
+admin_mfa_service = AdminMfaService()
 apps_service = AppsService()
 branding_service = BrandingService()
 invitation_service = InvitationService()
@@ -41,6 +49,10 @@ session_service = SessionService()
 
 def get_current_user(request: Request, db: Session = Depends(get_db)):
     return session_service.get_current_user(db=db, request=request)
+
+
+def get_current_context(request: Request, db: Session = Depends(get_db)) -> SessionContext:
+    return session_service.get_current_context(db=db, request=request)
 
 
 @router.get("/branding", response_model=BrandingResponse)
@@ -121,6 +133,57 @@ async def launch_prompt(
         launch_token=launch_token,
         redirect_url=launch_token_service.build_redirect_url(launch_token),
     )
+
+
+@router.post("/mfa/admin/request", response_model=AdminMfaRequestResponse)
+async def request_admin_mfa(
+    context: SessionContext = Depends(get_current_context),
+    db: Session = Depends(get_db),
+) -> AdminMfaRequestResponse:
+    if not apps_service.has_admin_access(db=db, user_id_hash=context.user.user_id_hash):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access is not enabled for this user.")
+    try:
+        return admin_mfa_service.request_code(db=db, user=context.user, portal_session=context.session)
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+
+
+@router.post("/mfa/admin/verify", response_model=AdminMfaVerifyResponse)
+async def verify_admin_mfa(
+    payload: AdminMfaVerifyRequest,
+    context: SessionContext = Depends(get_current_context),
+    db: Session = Depends(get_db),
+) -> AdminMfaVerifyResponse:
+    if not apps_service.has_admin_access(db=db, user_id_hash=context.user.user_id_hash):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access is not enabled for this user.")
+    try:
+        return admin_mfa_service.verify_code(
+            db=db,
+            user=context.user,
+            portal_session=context.session,
+            code=payload.code,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+
+
+@router.post("/launch/admin", response_model=AdminLaunchResponse)
+async def launch_admin(
+    context: SessionContext = Depends(get_current_context),
+    db: Session = Depends(get_db),
+) -> AdminLaunchResponse:
+    if not apps_service.has_admin_access(db=db, user_id_hash=context.user.user_id_hash):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access is not enabled for this user.")
+    try:
+        admin_mfa_service.ensure_recent_verification(portal_session=context.session)
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+
+    launch_token = admin_launch_service.create_launch_token(user=context.user)
+    context.session.admin_mfa_verified_at = None
+    db.add(context.session)
+    db.commit()
+    return AdminLaunchResponse(redirect_url=admin_launch_service.build_redirect_url(launch_token))
 
 
 @router.post("/accept-invite", response_model=AcceptInvitationResponse)

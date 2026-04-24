@@ -1,13 +1,17 @@
 import { useEffect, useState } from "react";
 import { PortalCard } from "../components/PortalCard";
 import {
+  launchAdmin,
   buildTenantAwarePath,
   fetchApps,
   fetchBranding,
   getTenantQueryValue,
   launchPrompt,
   logout,
+  requestAdminMfa,
+  verifyAdminMfa,
   type AppDescriptor,
+  type AdminMfaRequestResponse,
   type BrandingPayload,
 } from "../lib/api";
 
@@ -20,8 +24,14 @@ export function AppsPage() {
   const [apps, setApps] = useState<AppDescriptor[]>([]);
   const [loading, setLoading] = useState(true);
   const [launchingPrompt, setLaunchingPrompt] = useState(false);
+  const [requestingAdminMfa, setRequestingAdminMfa] = useState(false);
+  const [verifyingAdminMfa, setVerifyingAdminMfa] = useState(false);
+  const [launchingAdmin, setLaunchingAdmin] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
+  const [adminCode, setAdminCode] = useState("");
+  const [adminMfaState, setAdminMfaState] = useState<AdminMfaRequestResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [adminMessage, setAdminMessage] = useState<string | null>(null);
   const [branding, setBranding] = useState<BrandingPayload>({
     welcome_message: DEFAULT_WELCOME_MESSAGE,
     logo_url: null,
@@ -84,6 +94,39 @@ export function AppsPage() {
     }
   }
 
+  async function handleAdminMfaRequest() {
+    setRequestingAdminMfa(true);
+    setError(null);
+    setAdminMessage(null);
+    setAdminCode("");
+    try {
+      const payload = await requestAdminMfa();
+      setAdminMfaState(payload);
+      setAdminMessage("We sent a verification code to your email. Enter it below to continue into Herman Admin.");
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : "Unable to send Admin verification code.");
+    } finally {
+      setRequestingAdminMfa(false);
+    }
+  }
+
+  async function handleAdminVerifyAndLaunch() {
+    setVerifyingAdminMfa(true);
+    setError(null);
+    setAdminMessage(null);
+    try {
+      await verifyAdminMfa(adminCode);
+      setLaunchingAdmin(true);
+      const payload = await launchAdmin();
+      window.location.href = payload.redirect_url;
+    } catch (verifyError) {
+      setError(verifyError instanceof Error ? verifyError.message : "Unable to launch Herman Admin.");
+    } finally {
+      setVerifyingAdminMfa(false);
+      setLaunchingAdmin(false);
+    }
+  }
+
   async function handleLogout() {
     setLoggingOut(true);
     setError(null);
@@ -124,9 +167,60 @@ export function AppsPage() {
                   >
                     {launchingPrompt ? "Opening..." : "Open Herman Prompt"}
                   </button>
+                ) : app.enabled ? (
+                  <div className="stack compact-stack">
+                    {!adminMfaState ? (
+                      <button
+                        className="secondary-button"
+                        type="button"
+                        onClick={handleAdminMfaRequest}
+                        disabled={requestingAdminMfa}
+                      >
+                        {requestingAdminMfa ? "Sending code..." : "Open Herman Admin"}
+                      </button>
+                    ) : (
+                      <>
+                        {adminMessage ? <div className="success-banner">{adminMessage}</div> : null}
+                        {adminMfaState.dev_code ? (
+                          <div className="success-banner">
+                            Dev verification code: <strong>{adminMfaState.dev_code}</strong>
+                          </div>
+                        ) : null}
+                        <label className="field">
+                          <span>Verification code</span>
+                          <input
+                            inputMode="numeric"
+                            pattern="[0-9]*"
+                            value={adminCode}
+                            onChange={(event) => setAdminCode(event.target.value)}
+                            placeholder="Enter the email code"
+                            required
+                          />
+                        </label>
+                        <div className="app-actions-row">
+                          <button
+                            className="primary-button"
+                            type="button"
+                            onClick={handleAdminVerifyAndLaunch}
+                            disabled={!adminCode.trim() || verifyingAdminMfa || launchingAdmin}
+                          >
+                            {verifyingAdminMfa || launchingAdmin ? "Launching..." : "Verify and launch"}
+                          </button>
+                          <button
+                            className="text-button"
+                            type="button"
+                            onClick={handleAdminMfaRequest}
+                            disabled={requestingAdminMfa}
+                          >
+                            {requestingAdminMfa ? "Resending..." : "Resend code"}
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </div>
                 ) : (
                   <button className="secondary-button" type="button" disabled>
-                    {app.enabled ? "Admin launch coming next" : "Not available"}
+                    Not available
                   </button>
                 )}
               </section>
