@@ -11,9 +11,13 @@ from app.models.auth_user import AuthUser
 from app.models.password_reset_token import PasswordResetToken
 from app.schemas.auth import ForgotPasswordRequest, ForgotPasswordResponse, ResetPasswordRequest, ResetPasswordResponse
 from app.services.credential_compat import set_password
+from app.services.email_service import EmailDeliveryError, EmailService
 
 
 class PasswordResetService:
+    def __init__(self) -> None:
+        self.email_service = EmailService()
+
     def request_reset(self, payload: ForgotPasswordRequest, *, db: Session) -> ForgotPasswordResponse:
         reset_token = generate_reset_token()
         reset_url = None
@@ -27,8 +31,17 @@ class PasswordResetService:
             db.add(token_record)
             db.commit()
 
-            if settings.dev_show_reset_links:
-                reset_url = f"{settings.portal_ui_url}/reset-password?token={reset_token}"
+            reset_url = f"{settings.portal_ui_url}/reset-password?token={reset_token}"
+            if settings.resend_api_key:
+                try:
+                    self.email_service.send_password_reset_email(email=user.email, reset_url=reset_url)
+                except EmailDeliveryError as exc:
+                    raise ValueError(str(exc)) from exc
+            elif not settings.dev_show_reset_links:
+                raise ValueError("Password reset email delivery is not configured.")
+
+            if not settings.dev_show_reset_links:
+                reset_url = None
         return ForgotPasswordResponse(status="accepted", reset_url=reset_url)
 
     def reset_password(self, payload: ResetPasswordRequest, *, db: Session) -> ResetPasswordResponse:

@@ -202,7 +202,10 @@ async def forgot_password(
     payload: ForgotPasswordRequest,
     db: Session = Depends(get_db),
 ) -> ForgotPasswordResponse:
-    return password_reset_service.request_reset(payload, db=db)
+    try:
+        return password_reset_service.request_reset(payload, db=db)
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
 
 
 @router.post("/reset-password", response_model=ResetPasswordResponse)
