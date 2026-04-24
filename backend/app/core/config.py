@@ -16,14 +16,26 @@ class Settings(BaseSettings):
     hermanprompt_ui_url: str = Field(default="http://localhost:5173", alias="HERMANPROMPT_UI_URL")
     hermanadmin_ui_url: str = Field(
         default="https://hermanprompt-admin-tool-production.up.railway.app/",
-        alias="HERMANADMIN_UI_URL",
+        validation_alias=AliasChoices("HERMANADMIN_UI_URL", "HERMAN_ADMIN_UI_URL"),
     )
     portal_ui_url: str = Field(default="http://localhost:5174", alias="PORTAL_UI_URL")
     hermanprompt_launch_secret: str = Field(default="dev-launch-secret", alias="HERMANPROMPT_LAUNCH_SECRET")
-    hermanadmin_launch_secret: str = Field(default="test-admin-launch-secret", alias="HERMANADMIN_LAUNCH_SECRET")
-    hermanadmin_launch_issuer: str = Field(default="herman_portal_local", alias="HERMANADMIN_LAUNCH_ISSUER")
-    hermanadmin_launch_audience: str = Field(default="herman_admin", alias="HERMANADMIN_LAUNCH_AUDIENCE")
-    hermanadmin_launch_token_use: str = Field(default="admin_launch", alias="HERMANADMIN_LAUNCH_TOKEN_USE")
+    hermanadmin_launch_secret: str = Field(
+        default="test-admin-launch-secret",
+        validation_alias=AliasChoices("HERMANADMIN_LAUNCH_SECRET", "HERMAN_ADMIN_LAUNCH_SECRET"),
+    )
+    hermanadmin_launch_issuer: str = Field(
+        default="herman_portal_local",
+        validation_alias=AliasChoices("HERMANADMIN_LAUNCH_ISSUER", "HERMAN_ADMIN_LAUNCH_ISSUER"),
+    )
+    hermanadmin_launch_audience: str = Field(
+        default="herman_admin",
+        validation_alias=AliasChoices("HERMANADMIN_LAUNCH_AUDIENCE", "HERMAN_ADMIN_LAUNCH_AUDIENCE"),
+    )
+    hermanadmin_launch_token_use: str = Field(
+        default="admin_launch",
+        validation_alias=AliasChoices("HERMANADMIN_LAUNCH_TOKEN_USE", "HERMAN_ADMIN_LAUNCH_TOKEN_USE"),
+    )
     launch_token_ttl_seconds: int = Field(default=3600, alias="LAUNCH_TOKEN_TTL_SECONDS")
     portal_session_cookie_name: str = Field(default="herman_portal_session", alias="PORTAL_SESSION_COOKIE_NAME")
     portal_session_ttl_seconds: int = Field(default=43200, alias="PORTAL_SESSION_TTL_SECONDS")
