@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.core.security import verify_password
@@ -63,4 +63,6 @@ class AuthService:
 
     def _get_user_by_email(self, db: Session, email: str) -> AuthUser | None:
         normalized_email = email.strip().lower()
-        return db.execute(select(AuthUser).where(AuthUser.email == normalized_email)).scalar_one_or_none()
+        return db.execute(
+            select(AuthUser).where(func.lower(func.trim(AuthUser.email)) == normalized_email)
+        ).scalar_one_or_none()

@@ -77,7 +77,7 @@ class InvitationService:
             raise ValueError("Invitation user could not be resolved.")
 
         normalized_email = invitation.email.strip().lower()
-        if user.email != normalized_email:
+        if user.email.strip().lower() != normalized_email:
             raise ValueError("Invitation email does not match the mapped user.")
 
         now = datetime.utcnow()
