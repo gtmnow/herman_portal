@@ -180,6 +180,6 @@ Fix:
 4. `/invite` displays tenant-specific logo and welcome message when configured
 5. expired invite is rejected
 6. invitation acceptance sets the initial password successfully
-7. forgot-password flow returns accepted response
+7. forgot-password flow sends a reset email for an active user and returns an error for missing or inactive accounts
 8. change-password flow succeeds
 9. new password works and old password fails

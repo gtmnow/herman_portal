@@ -22,26 +22,30 @@ class PasswordResetService:
         reset_token = generate_reset_token()
         reset_url = None
         user = self._get_user_by_email(db, payload.email)
-        if user is not None and user.is_active:
-            token_record = PasswordResetToken(
-                user_id_hash=user.user_id_hash,
-                token_hash=hash_reset_token(reset_token),
-                expires_at=datetime.utcnow() + timedelta(seconds=settings.password_reset_token_ttl_seconds),
-            )
-            db.add(token_record)
-            db.commit()
+        if user is None:
+            raise ValueError("No user account was found for that email.")
+        if not user.is_active:
+            raise ValueError("User account is inactive.")
 
-            reset_url = f"{settings.portal_ui_url}/reset-password?token={reset_token}"
-            if settings.resend_api_key:
-                try:
-                    self.email_service.send_password_reset_email(email=user.email, reset_url=reset_url)
-                except EmailDeliveryError as exc:
-                    raise ValueError(str(exc)) from exc
-            elif not settings.allow_dev_reset_links:
-                raise ValueError("Password reset email delivery is not configured.")
+        token_record = PasswordResetToken(
+            user_id_hash=user.user_id_hash,
+            token_hash=hash_reset_token(reset_token),
+            expires_at=datetime.utcnow() + timedelta(seconds=settings.password_reset_token_ttl_seconds),
+        )
+        db.add(token_record)
+        db.commit()
 
-            if not settings.allow_dev_reset_links:
-                reset_url = None
+        reset_url = f"{settings.portal_ui_url}/reset-password?token={reset_token}"
+        if settings.resend_api_key:
+            try:
+                self.email_service.send_password_reset_email(email=user.email, reset_url=reset_url)
+            except EmailDeliveryError as exc:
+                raise ValueError(str(exc)) from exc
+        elif not settings.allow_dev_reset_links:
+            raise ValueError("Password reset email delivery is not configured.")
+
+        if not settings.allow_dev_reset_links:
+            reset_url = None
         return ForgotPasswordResponse(status="accepted", reset_url=reset_url)
 
     def reset_password(self, payload: ResetPasswordRequest, *, db: Session) -> ResetPasswordResponse:
