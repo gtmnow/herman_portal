@@ -85,6 +85,14 @@ class Settings(BaseSettings):
     def effective_portal_session_secure(self) -> bool:
         return self.portal_session_secure or self.app_env.lower() == "production"
 
+    @property
+    def allow_dev_mfa_codes(self) -> bool:
+        return self.dev_show_mfa_codes and self.app_env.lower() != "production"
+
+    @property
+    def allow_dev_reset_links(self) -> bool:
+        return self.dev_show_reset_links and self.app_env.lower() != "production"
+
 
 @lru_cache
 def get_settings() -> Settings:

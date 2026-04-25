@@ -37,10 +37,10 @@ class PasswordResetService:
                     self.email_service.send_password_reset_email(email=user.email, reset_url=reset_url)
                 except EmailDeliveryError as exc:
                     raise ValueError(str(exc)) from exc
-            elif not settings.dev_show_reset_links:
+            elif not settings.allow_dev_reset_links:
                 raise ValueError("Password reset email delivery is not configured.")
 
-            if not settings.dev_show_reset_links:
+            if not settings.allow_dev_reset_links:
                 reset_url = None
         return ForgotPasswordResponse(status="accepted", reset_url=reset_url)
 

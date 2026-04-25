@@ -61,6 +61,9 @@ python -m alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port $PO
 - `LAUNCH_TOKEN_TTL_SECONDS=3600`
 - `PASSWORD_RESET_TOKEN_TTL_SECONDS=1800`
 - `INVITATION_TOKEN_FALLBACK_TTL_SECONDS=604800`
+- `RESEND_API_KEY=<resend api key>`
+- `ADMIN_MFA_FROM_EMAIL=<verified sender, or onboarding@resend.dev only for Resend test mode>`
+- `ADMIN_MFA_FROM_NAME=Herman Portal`
 - `DEV_SHOW_RESET_LINKS=false`
 - `CORS_ALLOWED_ORIGINS=https://hermanportal-production.up.railway.app`
 - `APP_ENV=production`
@@ -72,6 +75,7 @@ Notes:
 - `postgres://...` and `postgresql://...` are normalized to the installed `psycopg` driver automatically
 - because the database is shared with other services, Herman Portal uses its own Alembic version table: `alembic_version_herman_portal`
 - invitation acceptance should rely on `user_invitations.expires_at` when present; the fallback TTL env is only for compatibility during migration
+- in production, forgot-password and Admin MFA require Resend to be configured; dev-only reset links and dev MFA codes are intentionally disabled even if their local-development flags are left on
 
 ## Railway Frontend Configuration
 

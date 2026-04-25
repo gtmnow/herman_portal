@@ -47,7 +47,7 @@ class AdminMfaService:
                 self.email_service.send_admin_mfa_code(email=user.email, code=code)
             except EmailDeliveryError as exc:
                 raise ValueError(str(exc)) from exc
-        elif settings.dev_show_mfa_codes and settings.app_env.lower() != "production":
+        elif settings.allow_dev_mfa_codes:
             dev_code = code
         else:
             raise ValueError("Admin MFA email delivery is not configured.")
