@@ -127,7 +127,7 @@ async def launch_prompt(
     user=Depends(get_current_user),
 ) -> AcceptInvitationResponse:
     launch_token = launch_token_service.create_launch_token(
-        external_user_id=f"auth_user:{user.user_id_hash}",
+        external_user_id=f"auth_user:{user.id}",
         display_name=user.display_name or user.email,
         tenant_id=user.tenant_id,
         user_id_hash=user.user_id_hash,
