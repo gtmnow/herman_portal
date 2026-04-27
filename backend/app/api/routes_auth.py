@@ -81,9 +81,14 @@ async def login(payload: LoginRequest, response: Response, db: Session = Depends
         ).scalar_one_or_none()
         if auth_user is None:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials.")
-        session_service.create_session(db=db, response=response, user=auth_user)
+        session_token = session_service.create_session(db=db, response=response, user=auth_user)
         db.commit()
-        return login_response
+        return LoginResponse(
+            status=login_response.status,
+            redirect_path=login_response.redirect_path,
+            user=login_response.user,
+            session_token=session_token,
+        )
     except PermissionError as exc:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(exc)) from exc
     except ValueError as exc:

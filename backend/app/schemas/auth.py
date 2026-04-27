@@ -17,6 +17,7 @@ class LoginResponse(BaseModel):
     status: str = "authenticated"
     redirect_path: str = "/apps"
     user: PortalUserSummary
+    session_token: str
 
 
 class LogoutResponse(BaseModel):

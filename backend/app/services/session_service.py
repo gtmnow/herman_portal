@@ -20,7 +20,7 @@ class SessionContext:
 
 
 class SessionService:
-    def create_session(self, *, db: Session, response: Response, user: AuthUser) -> None:
+    def create_session(self, *, db: Session, response: Response, user: AuthUser) -> str:
         now = datetime.utcnow()
         raw_token = generate_session_token()
         session_record = AuthSession(
@@ -33,9 +33,10 @@ class SessionService:
         )
         db.add(session_record)
         self._set_session_cookie(response, raw_token)
+        return raw_token
 
     def clear_session(self, *, db: Session, request: Request, response: Response) -> None:
-        raw_token = request.cookies.get(settings.portal_session_cookie_name)
+        raw_token = self._get_session_token_from_request(request)
         if raw_token:
             session_record = db.get(AuthSession, hash_session_token(raw_token))
             if session_record is not None and session_record.revoked_at is None:
@@ -50,7 +51,7 @@ class SessionService:
         )
 
     def get_current_context(self, *, db: Session, request: Request) -> SessionContext:
-        raw_token = request.cookies.get(settings.portal_session_cookie_name)
+        raw_token = self._get_session_token_from_request(request)
         if not raw_token:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required.")
 
@@ -82,3 +83,21 @@ class SessionService:
             secure=settings.effective_portal_session_secure,
             path="/",
         )
+
+    def _get_session_token_from_request(self, request: Request) -> str | None:
+        cookie_token = request.cookies.get(settings.portal_session_cookie_name)
+        if cookie_token:
+            return cookie_token
+
+        header_token = request.headers.get("X-Portal-Session")
+        if header_token:
+            return header_token.strip() or None
+
+        authorization = request.headers.get("Authorization")
+        if not authorization:
+            return None
+
+        scheme, _, token = authorization.partition(" ")
+        if scheme.lower() != "bearer":
+            return None
+        return token.strip() or None
