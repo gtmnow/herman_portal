@@ -75,18 +75,16 @@ async def preview_invitation(
 @router.post("/login", response_model=LoginResponse)
 async def login(payload: LoginRequest, response: Response, db: Session = Depends(get_db)) -> LoginResponse:
     try:
-        login_response = auth_service.login(payload, db=db)
+        user_summary = auth_service.login(payload, db=db)
         auth_user = db.execute(
-            select(AuthUser).where(AuthUser.user_id_hash == login_response.user.user_id_hash)
+            select(AuthUser).where(AuthUser.user_id_hash == user_summary.user_id_hash)
         ).scalar_one_or_none()
         if auth_user is None:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials.")
         session_token = session_service.create_session(db=db, response=response, user=auth_user)
         db.commit()
         return LoginResponse(
-            status=login_response.status,
-            redirect_path=login_response.redirect_path,
-            user=login_response.user,
+            user=user_summary,
             session_token=session_token,
         )
     except PermissionError as exc:

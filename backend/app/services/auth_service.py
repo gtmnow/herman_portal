@@ -11,14 +11,13 @@ from app.schemas.auth import (
     ChangePasswordRequest,
     ChangePasswordResponse,
     LoginRequest,
-    LoginResponse,
     PortalUserSummary,
 )
 from app.services.credential_compat import load_credentials, record_failed_login, record_successful_login, set_password
 
 
 class AuthService:
-    def login(self, payload: LoginRequest, *, db: Session) -> LoginResponse:
+    def login(self, payload: LoginRequest, *, db: Session) -> PortalUserSummary:
         user = self._get_user_by_email(db, payload.email)
         credentials = load_credentials(db, user.user_id_hash) if user is not None else None
         if user is None or credentials is None or not verify_password(payload.password, credentials.password_hash):
@@ -37,13 +36,11 @@ class AuthService:
         db.add(user)
         db.commit()
 
-        return LoginResponse(
-            user=PortalUserSummary(
-                email=user.email,
-                user_id_hash=user.user_id_hash,
-                display_name=user.display_name,
-                tenant_id=user.tenant_id,
-            ),
+        return PortalUserSummary(
+            email=user.email,
+            user_id_hash=user.user_id_hash,
+            display_name=user.display_name,
+            tenant_id=user.tenant_id,
         )
 
     def change_password(self, payload: ChangePasswordRequest, *, db: Session) -> ChangePasswordResponse:
