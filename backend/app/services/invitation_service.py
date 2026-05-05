@@ -13,6 +13,7 @@ from app.schemas.auth import AcceptInvitationRequest, AcceptInvitationResponse, 
 from app.services.branding_service import BrandingService
 from app.services.credential_compat import set_password
 from app.services.launch_token_service import LaunchTokenService
+from app.services.tenant_resolution_service import resolve_primary_tenant_id
 
 ACCEPTABLE_INVITATION_STATUSES = {"pending", "sent"}
 
@@ -91,10 +92,11 @@ class InvitationService:
         self._mark_invitation_accepted(db, invitation.invite_token_hash, now)
         db.commit()
 
+        resolved_tenant_id = resolve_primary_tenant_id(db, user) or invitation.tenant_id
         launch_token = self.launch_token_service.create_launch_token(
             external_user_id=f"auth_user:{user.user_id_hash}",
             display_name=user.display_name or user.email,
-            tenant_id=user.tenant_id,
+            tenant_id=resolved_tenant_id,
             user_id_hash=user.user_id_hash,
         )
         return AcceptInvitationResponse(
