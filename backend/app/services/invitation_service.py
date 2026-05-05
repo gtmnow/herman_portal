@@ -110,13 +110,19 @@ class InvitationService:
         token_hash = hash_invitation_token(normalized_token)
         query = text(
             """
-            SELECT invite_token_hash, user_id_hash, tenant_id, email, status,
-                   NULL::timestamptz AS expires_at,
+            SELECT
+                   invite_token_hash,
+                   user_id_hash,
+                   tenant_id,
+                   email,
+                   status,
+                   expires_at,
                    accepted_at,
-                   NULL::timestamptz AS revoked_at,
+                   revoked_at,
                    created_at
             FROM user_invitations
             WHERE invite_token_hash = :token_hash
+            ORDER BY created_at DESC, updated_at DESC
             LIMIT 1
             """
         )

@@ -53,6 +53,9 @@ class Settings(BaseSettings):
     password_reset_token_ttl_seconds: int = Field(default=1800, alias="PASSWORD_RESET_TOKEN_TTL_SECONDS")
     invitation_token_fallback_ttl_seconds: int = Field(default=604800, alias="INVITATION_TOKEN_FALLBACK_TTL_SECONDS")
     dev_show_reset_links: bool = Field(default=True, alias="DEV_SHOW_RESET_LINKS")
+    herman_db_canonical_mode: bool = Field(default=False, alias="HERMAN_DB_CANONICAL_MODE")
+    herman_db_version_table: str = Field(default="alembic_version", alias="HERMAN_DB_VERSION_TABLE")
+    herman_db_allowed_revisions_raw: str = Field(default="20260504_0006,20260504_0007,20260504_0008", alias="HERMAN_DB_ALLOWED_REVISIONS")
     default_welcome_message: str = Field(
         default="Welcome to Herman Prompt. Please login to begin.",
         alias="DEFAULT_WELCOME_MESSAGE",
@@ -92,6 +95,20 @@ class Settings(BaseSettings):
     @property
     def allow_dev_reset_links(self) -> bool:
         return self.dev_show_reset_links and self.app_env.lower() != "production"
+
+    @property
+    def herman_db_allowed_revisions(self) -> set[str]:
+        return {
+            revision.strip()
+            for revision in self.herman_db_allowed_revisions_raw.split(",")
+            if revision.strip()
+        }
+
+    @property
+    def effective_herman_db_canonical_mode(self) -> bool:
+        if self.herman_db_canonical_mode:
+            return True
+        return not self.sqlalchemy_database_url.startswith("sqlite") and self.app_env.lower() != "development"
 
 
 @lru_cache
