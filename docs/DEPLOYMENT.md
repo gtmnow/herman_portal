@@ -73,7 +73,7 @@ Notes:
 
 - the backend accepts either `DATABASE_URL` or `DATABASE_PUBLIC_URL`
 - `postgres://...` and `postgresql://...` are normalized to the installed `psycopg` driver automatically
-- because the database is shared with other services, Herman Portal uses its own Alembic version table: `alembic_version_herman_portal`
+- the shared database is now governed by `herman-db`; Herman Portal should perform startup schema-version checks against `alembic_version` rather than acting as a schema authority
 - invitation acceptance should rely on `user_invitations.expires_at` when present; the fallback TTL env is only for compatibility during migration
 - in production, forgot-password and Admin MFA require Resend to be configured; dev-only reset links and dev MFA codes are intentionally disabled even if their local-development flags are left on
 
@@ -158,17 +158,17 @@ Common causes:
 - `logo_url` and `welcome_message` are null
 - portal failed to resolve tenant context from the invitation or login flow
 
-### Backend fails during migration
+### Backend fails during schema validation
 
 Common causes:
 
-- shared database already has another service’s `alembic_version` table
+- shared database is behind the required `herman-db` revision
 - missing `DATABASE_PUBLIC_URL` or `DATABASE_URL`
 - unsupported connection string format
 
 Fix:
 
-- use the portal’s Alembic setup, which writes to `alembic_version_herman_portal`
+- apply the canonical `herman-db` migrations first
 - set `DATABASE_PUBLIC_URL` or `DATABASE_URL` on the backend service
 - confirm the URL points to the shared Postgres database
 

@@ -55,7 +55,7 @@ class Settings(BaseSettings):
     dev_show_reset_links: bool = Field(default=True, alias="DEV_SHOW_RESET_LINKS")
     herman_db_canonical_mode: bool = Field(default=False, alias="HERMAN_DB_CANONICAL_MODE")
     herman_db_version_table: str = Field(default="alembic_version", alias="HERMAN_DB_VERSION_TABLE")
-    herman_db_allowed_revisions_raw: str = Field(default="20260504_0006,20260504_0007,20260504_0008,20260504_0009,20260505_0010,20260505_0011,20260505_0012,20260505_0013", alias="HERMAN_DB_ALLOWED_REVISIONS")
+    herman_db_allowed_revisions_raw: str = Field(default="20260504_0006,20260504_0007,20260504_0008,20260504_0009,20260505_0010,20260505_0011,20260505_0012,20260505_0013,20260505_0014", alias="HERMAN_DB_ALLOWED_REVISIONS")
     default_welcome_message: str = Field(
         default="Welcome to Herman Prompt. Please login to begin.",
         alias="DEFAULT_WELCOME_MESSAGE",
