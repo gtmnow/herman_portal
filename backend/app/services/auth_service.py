@@ -14,6 +14,7 @@ from app.schemas.auth import (
     PortalUserSummary,
 )
 from app.services.credential_compat import load_credentials, record_failed_login, record_successful_login, set_password
+from app.services.tenant_resolution_service import resolve_primary_tenant_id
 
 
 class AuthService:
@@ -40,7 +41,7 @@ class AuthService:
             email=user.email,
             user_id_hash=user.user_id_hash,
             display_name=user.display_name,
-            tenant_id=user.tenant_id,
+            tenant_id=resolve_primary_tenant_id(db, user),
         )
 
     def change_password(self, payload: ChangePasswordRequest, *, db: Session) -> ChangePasswordResponse:

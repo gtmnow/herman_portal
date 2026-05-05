@@ -6,13 +6,14 @@ from sqlalchemy.orm import Session
 
 from app.models.auth_user import AuthUser
 from app.schemas.auth import AppDescriptor, AppsResponse, PortalUserSummary
+from app.services.tenant_resolution_service import resolve_primary_tenant_id
 
 
 class AppsService:
     def get_available_apps(self, *, db: Session, user: AuthUser) -> AppsResponse:
         has_admin_access = self.has_admin_access(db=db, user_id_hash=user.user_id_hash)
         return AppsResponse(
-            user=self._to_user_summary(user),
+            user=self._to_user_summary(db, user),
             apps=[
                 AppDescriptor(
                     app_key="herman_prompt",
@@ -51,10 +52,10 @@ class AppsService:
             return False
         return result is not None
 
-    def _to_user_summary(self, user: AuthUser) -> PortalUserSummary:
+    def _to_user_summary(self, db: Session, user: AuthUser) -> PortalUserSummary:
         return PortalUserSummary(
             email=user.email,
             user_id_hash=user.user_id_hash,
             display_name=user.display_name,
-            tenant_id=user.tenant_id,
+            tenant_id=resolve_primary_tenant_id(db, user),
         )
