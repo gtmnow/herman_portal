@@ -17,7 +17,6 @@ class AuthUser(Base):
     display_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     tenant_id: Mapped[str] = mapped_column(String(255), default="tenant_demo")
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
-    is_admin: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     last_login_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)

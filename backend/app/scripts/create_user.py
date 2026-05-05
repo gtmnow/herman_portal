@@ -16,7 +16,6 @@ def main() -> None:
     parser.add_argument("--user-id-hash", required=True)
     parser.add_argument("--display-name", default=None)
     parser.add_argument("--tenant-id", default="tenant_demo")
-    parser.add_argument("--admin", action="store_true")
     args = parser.parse_args()
 
     session = SessionLocal()
@@ -29,14 +28,12 @@ def main() -> None:
                 user_id_hash=args.user_id_hash,
                 display_name=args.display_name,
                 tenant_id=args.tenant_id,
-                is_admin=args.admin,
             )
             session.add(user)
         else:
             user.user_id_hash = args.user_id_hash
             user.display_name = args.display_name
             user.tenant_id = args.tenant_id
-            user.is_admin = args.admin
             user.updated_at = datetime.utcnow()
             session.add(user)
 
